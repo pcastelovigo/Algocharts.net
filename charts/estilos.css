@@ -1,0 +1,23 @@
+div.icons {
+width: 150px;
+display: inline-block;
+}
+image.icons {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+figcaption {
+text-align: center;
+}
+.coin_icon > img {
+    height: 30px;
+    max-height: 30px;
+}
+.principal {
+width: 1360px;
+margin: auto;
+}
+.select2-container {
+    width: 350px !important;
+}

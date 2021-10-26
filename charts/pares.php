@@ -3,7 +3,6 @@ $host= "localhost";
 $username= "pablo";
 $password = "test1";
 $db_name = "pares";
-$db_name2 = "nombres;";
 $db = new mysqli($host,$username,$password,$db_name);
 
 if($db->connect_error) { die("connection failed:". $db->connect_error); }
