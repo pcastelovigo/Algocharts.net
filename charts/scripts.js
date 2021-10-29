@@ -17,6 +17,7 @@ function change_asset()
 function Goto() {
   var x = document.getElementById("ASSET-IN").value;
   var y = document.getElementById("ASSET-OUT").value;
+  if ( y == "ASSET-OUT" ) { var y = "0"; }
   var url = "https://freetinycharts.ovh/index.php?asset_in=" + encodeURIComponent(x) + "&asset_out=" + encodeURIComponent(y);
   window.location.href = url;
 };

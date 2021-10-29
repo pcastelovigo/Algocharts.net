@@ -38,9 +38,9 @@ for elemento in lista_pares:
 			unidades2 = 6
 			pass
 		client = TinymanMainnetClient(user_address=account['address'])
-		print(ASSET_ID)
+#		print(ASSET_ID)
 		ASA = client.fetch_asset(ASSET_ID)
-		print(ALGO_ID)
+#		print(ALGO_ID)
 		ALGO = client.fetch_asset(ALGO_ID)
 		pool = client.fetch_pool(ALGO, ASA)
 		try:
@@ -48,7 +48,7 @@ for elemento in lista_pares:
 			quote_asaXalgo = pool.fetch_fixed_output_swap_quote(ALGO(unidades2), slippage=0.01)
 		except Exception as excepcion:
 			pass
-	#informacion = pool.info()
+#informacion = pool.info()
 		try:
 			precioalgoXasa = float(quote_algoXasa.price*(unidades2/unidades1))
 			precioasaXalgo = float(quote_asaXalgo.price*(unidades1/unidades2))
@@ -78,7 +78,7 @@ for elemento in lista_pares:
 		valores = (fecha, precioasaXalgo)
 		cursor_diario.execute(insercion, valores)
 		dbdiario.commit()
-		#print(informacion)
+#print(informacion)
 	except:
 		print("excepcion")
 		pass
