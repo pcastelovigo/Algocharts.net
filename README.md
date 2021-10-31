@@ -1,3 +1,5 @@
+This software is live at https://freetinycharts.ovh
+
 How-to install:
 
 In a linux box with apache,php & mysql, as root:
