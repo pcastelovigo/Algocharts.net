@@ -48,7 +48,13 @@ for elemento in lista_pares:
 			quote_asaXalgo = pool.fetch_fixed_output_swap_quote(ALGO(unidades2), slippage=0.01)
 		except Exception as excepcion:
 			pass
-#informacion = pool.info()
+		informacion = pool.info()
+		if informacion['asset1_id'] == ASSET_ID:
+			cantidad_asset1 = informacion['asset1_reserves']
+			cantidad_asset2 = informacion['asset2_reserves']
+		else:
+			cantidad_asset2 = informacion['asset1_reserves']
+			cantidad_asset1 = informacion['asset2_reserves']
 		try:
 			precioalgoXasa = float(quote_algoXasa.price*(unidades2/unidades1))
 			precioasaXalgo = float(quote_asaXalgo.price*(unidades1/unidades2))
@@ -78,9 +84,18 @@ for elemento in lista_pares:
 		valores = (fecha, precioasaXalgo)
 		cursor_diario.execute(insercion, valores)
 		dbdiario.commit()
+		#AQUI
+		insercion = "INSERT INTO liquidez (pool_id, liqa1, liqa2) VALUES (" + repr(nombre_fichero1) + ", %s, %s) ON DUPLICATE KEY UPDATE liqa1 = %s, liqa2 = %s"
+		valores = (cantidad_asset1, cantidad_asset2, cantidad_asset1, cantidad_asset2)
+		cursor_diario.execute(insercion, valores)
+		dbdiario.commit()
+		insercion = "INSERT INTO liquidez (pool_id, liqa1, liqa2) VALUES (" + repr(nombre_fichero2) + ", %s, %s) ON DUPLICATE KEY UPDATE liqa1 = %s, liqa2 = %s"
+		valores = (cantidad_asset2, cantidad_asset1, cantidad_asset2, cantidad_asset1)
+		cursor_diario.execute(insercion, valores)
+		dbdiario.commit()
+
 #print(informacion)
 	except:
-		print("excepcion")
 		pass
 cursor_diario.close()
 dbdiario.close()

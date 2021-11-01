@@ -13,37 +13,39 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {die("Connection failed: " . $conn->connect_error);}
 $sql = "SELECT * FROM nombres where asset_id=".$asset_in."";
 $sql2 = "SELECT * FROM nombres where asset_id=".$asset_out."";
-$sql3 = "select asset_id, nombre, verify from nombres";
+$sql3 = "select asset_id, nombre, verify from nombres where asset_id > 0";
 
 $result = $conn->query($sql);
 $result2 = $conn->query($sql2);
 $result3 = $conn->query($sql3);
+$conn->close();
 
 if ($result->num_rows > 0) { while($row = $result->fetch_assoc()) { $nombre1 = $row["nombre"]; $unidad1 = $row["unidad"]; $cantidad1 = $row["cantidad"]; $decimales1 = $row["decimales"]; $url1 = $row["url"]; $verificado1 = $row["verify"]; } } else { echo "Error! You choosed non existing pairs."; }
 if ($result2->num_rows > 0) { while($row = $result2->fetch_assoc()) { $nombre2 = $row["nombre"]; $unidad2 = $row["unidad"]; $cantidad2 = $row["cantidad"]; $decimales2 = $row["decimales"]; $url2 = $row["url"]; $verificado2 = $row["verify"]; } } else { echo "Error! You choosed non existing pairs."; } 
-$conn->close();
-
-
 $cantidad1 = $cantidad1/(1*(10**$decimales1));
 $cantidad2 = $cantidad2/(1*(10**$decimales2));
 include 'tinychart.php';
+include 'precios.php';
 
 $dbname = "precios_diario";
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {die("Connection failed: " . $conn->connect_error);}
 $sql4 = "SELECT fecha FROM (SELECT * FROM ".$asset_in."_".$asset_out." WHERE id % 14 = 0 ORDER BY id DESC LIMIT 196) t2 ORDER BY t2.id ASC";
 $sql5 = "SELECT precio FROM (SELECT * FROM ".$asset_in."_".$asset_out." WHERE id % 14 = 0 ORDER BY id DESC LIMIT 196) t2 ORDER BY t2.id ASC";
-$sql6 = "SELECT precio FROM 0_312769 ORDER BY id DESC LIMIT 1";
+$sql6 = "SELECT * FROM liquidez where pool_id='".$asset_in."_".$asset_out."'";
 $sql7 = "SELECT precio FROM ".$asset_in."_".$asset_out." ORDER BY id DESC LIMIT 1";
 $result4 = $conn->query($sql4);
 $result5 = $conn->query($sql5);
 $result6 = $conn->query($sql6);
 $result7 = $conn->query($sql7);
-
 $conn->close();
-if ($result6->num_rows > 0) { while ($row = $result6->fetch_assoc()) { $usd = $row['precio']; } }
+$resultado_precios = array();
+if ($result5->num_rows > 0) { while($row = $result5->fetch_assoc()) { $resultado_precios[] = sprintf("%.8f", $row['precio']); } }
+if ($result6->num_rows > 0) { while ($row = $result6->fetch_assoc()) { $liqa1 = $row['liqa1']; $liqa2 = $row['liqa2']; } }
 if ($result7->num_rows > 0) { while ($row = $result7->fetch_assoc()) { $valor = $row['precio']; } }
-
+//Estan invertidos :D
+$liqa2 = $liqa2/(1*(10**$decimales1));
+$liqa1 = $liqa1/(1*(10**$decimales2));
 
 ?>
 <!DOCTYPE html>
@@ -52,31 +54,32 @@ if ($result7->num_rows > 0) { while ($row = $result7->fetch_assoc()) { $valor = 
 <title> FreeTinyCharts - <?php if(!$_GET) { echo "Charts for Tinyman assets"; } else { echo "".$nombre1." TO ".$nombre2." chart"; } ?> </title>
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="estilos.css">
+<link rel="stylesheet" href="estilos.css?v=1.4">
 <link rel="canonical" href="https://freetinycharts.ovh/index.php">
 <meta name="description" content="FreeTinycharts is a free, opensource service that that automagically grabs all new&existing Tinyman pools, stores price data and create charts for them.">
-<script src="scripts.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="scripts.js?v=1.1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@dmester/sffjs@1.17.0/dist/stringformat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 
 <body>
-<div class="w3-bar w3-aqua principal" id="paginatop">
+<div class="w3-bar w3-aqua" id="paginatop">
 <a href="pricing.html" class="w3-bar-item w3-button w3-padding-16" style="float:right;">Pricing</a>
 <a href="freeapi.html" class="w3-bar-item w3-button w3-padding-16" style="float:right;">Free API</a>
 <a href="roadmap.html" class="w3-bar-item w3-button w3-padding-16" style="float:right;">Roadmap</a>
 <a href="about.html" class="w3-bar-item w3-button w3-padding-16" style="float:right;">About</a>
-<a href="#" class="w3-bar-item w3-button w3-padding-16" style="float:left;">1 Algorand: <?php echo sprintf("%.3f", $usd)." USD" ?></a>
 
 </div>
-<div class="w3-container w3-row principal">
+<div class="w3-container w3-row">
 
 <div class="w3-container w3-twothird">
 <p>FreeTinycharts is a free, opensource service that that automagically grabs all new&amp;existing Tinyman pools, stores price data and create charts for them.</p>
 
 <p>It's on early stage and so if you want to help me to develop this and other Tinyman software and maintain this server, you can:</p>
-<p>- Donate $algo to ARSXJS26M6M3MZUXJUYIWA4HOF5XKDEDDBYHEJS3OCCGUVCKQN3JNHXGOQ <br> Any amount will be appreciated.</p>
+<p style="word-wrap: break-word;">- Donate $algo to ARSXJS26M6M3MZUXJUYIWA4HOF5XKDEDDBYHEJS3OCCGUVCKQN3JNHXGOQ <br> Any amount will be appreciated.</p>
 <p>- Buy official FreeTinycharts <a href="https://app.tinyman.org/#/swap?asset_in=0&amp;asset_out=330109984">ASA ID 330109984</a>. It can be used to buy FreeTinycharts services.</p>
 <p>Thank you very much!</p>
 <br>
@@ -94,7 +97,7 @@ $(document).ready(function() {
 <select class="selector" id="ASSET-OUT">
 <option value="Select asset OUT">ASSET OUT</option>
 </select>
-<input type="button" value="Go to chart" onclick = "Goto()" />
+<input type="button" value="Go to chart" style="margin-bottom:12px; vertical-align: middle; line-height: 28px" onclick = "Goto()" />
 <p><small>If no chart shown: Pool has NOT liquidity or deleted asset. Verified assets are shown with a ✅ mark.</small><p>
 </div>
 <div class="w3-container w3-third">
@@ -102,108 +105,94 @@ $(document).ready(function() {
 </div>
 </div>
 
+<div class="w3-container w3-row">
 
-<div class="w3-container w3-row principal">
 <div class="w3-twothird w3-container">
 <h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 30 day view"; ?></h2>
-<canvas id="grafica" width="1000" style="margin: auto; max-width: 100%"></canvas>
+<div id="grafica" style="height:600px"></div>
+<?php if (isset($resultado_precios[195])) { $cambio = ((($resultado_precios[195]-$resultado_precios[99])/$resultado_precios[99])*100);
+if ($cambio>0) { echo "<small><b>30 day change:</b> </small><small style=\"color: green;\">".sprintf("%.2f",$cambio)." %</small>"; } else {echo "<small>30 day change: </small><small style=\"color: red;\">".sprintf("%.2f",$cambio)." %</small>"; } } else { echo "<small> 30 day change: No enougth data yet</small>";} ?>
+&nbsp;&nbsp;&nbsp;<small><b> Last value:</b> <?php echo sprintf("%.6f",$valor)." ".$nombre2."</small>&nbsp;&nbsp;&nbsp;".$infoprecio_assetin ?></small>&nbsp;&nbsp;&nbsp;<small><b>Liquidity in pool: </b><?php echo sprintf("%.2f",$liqa2)." ".$unidad1.", ".sprintf("%.2f",$liqa1)." ".$unidad2.""; ?> </small>
+<div class="w3-bar w3-aqua selector_grafica w3-round-xlarge" id="selecion_graficas" style="margin-top: 10px; margin-bottom: 10px">
+<a href=<?php echo '"'."index.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">48h chart</a>
+<a href=<?php echo '"'."index-30.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">1 month chart</a>
+<a href=<?php echo '"'."index-1y.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">1 year chart</a>
 </div>
-<div class="w3-container w3-third">
-<br>
-<b>1 Algorand: <?php echo sprintf("%.3f", $usd)." USD" ?></b>
-<br>
-<h2>Other charts</h2>
-<a href=<?php echo '"'."index.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?>>48 hours chart</a>
-<br>
-<a href=<?php echo '"'."index-30.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?>>1 month chart</a>
-<br>
-<a href=<?php echo '"'."index-1y.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?>>1 year chart</a>
-<br>
-<?php if (in_array($asset_in, $tinychart)) { echo "<a href=https://tinychart.org/asset/".$asset_in." target=\"_blank\">View ".$nombre1." on Tinychart.org</a><br>"; } ?>
-<h2>Popular pools</h2>
-<a href="index.php?asset_in=226701642&amp;asset_out=0">Yieldy/Algorand</a>
-<br>
-<a href="index.php?asset_in=27165954&amp;asset_out=0">Planet/Algorand</a>
-<br>
-<a href="index.php?asset_in=230946361&amp;asset_out=31566704">AlgoGems/USDC</a>
-<br>
-<a href="index.php?asset_in=230946361&amp;asset_out=0">AlgoGems/Algorand</a>
-<br>
-<a href="index.php?asset_in=137594422&amp;asset_out=0">HEADLINE/Algorand</a>
-<h2>View assets in AlgoExplorer</h2>
-<?php if ($asset_in!="0") { echo "<a href=https://algoexplorer.io/asset/".$asset_in." target=\"_blank\">View ".$nombre1." on AlgoExplorer</a><br>"; }
-if ($asset_out!="0") { echo "<a href=https://algoexplorer.io/asset/".$asset_out." target=\"_blank\">View ".$nombre2." on AlgoExplorer</a>"; } ?>
-</div>
-
-
-<div class="w3-container w3-twothird">
-<div class="w3-container w3-row" style="width:100%">
-<div class="w3-container w3-half">
-<?php echo "<small><b>".$nombre1." data:<br> Unit name: </b>".$unidad1." <br><b>Total supply: </b>".$cantidad1." ".$unidad1." <br><b>Decimals: </b>".$decimales1."</small>"; if ($asset_out == "0" ) { echo "<small><br><b>Token USD value: </b>".sprintf("%.3f", $valor*$usd)." USD<br><b>Market cap: </b>".sprintf("%.3f", $valor*$usd*$cantidad1)." USD</small>"; } if (!filter_var($url1, FILTER_VALIDATE_URL) === false) { echo("<br><small><b>URL:</b> <a href=".$url1." target=\"_blank\">".$url1."</a></small>"); } ?>
-</div>
-<div class="w3-container w3-half">
-<?php echo "<small><b>".$nombre2." data:<br> Unit name: </b>".$unidad2." <br><b>Total supply: </b>".$cantidad2." ".$unidad2." <br><b>Decimals: </b>".$decimales1."</small>"; if ($asset_in == "0" ) { echo "<small><br><b>Token USD value: </b>".sprintf("%.3f", $valor*$usd)." USD<br><b>Market cap: </b>".sprintf("%.3f", $valor*$usd*$cantidad2)." USD</small>"; } if (!filter_var($url2, FILTER_VALIDATE_URL) === false) { echo("<br><small><b>URL:</b> <a href=".$url2." target=\"_blank\">".$url2."</a></small>"); } ?>
-</div>
-</div>
-</div>
-
-<div class="w3-container w3-twothird">
-<div class="icons" style="margin-left: 42px">
+<div class="w3-container w3-row">
+<div class="icons">
 <figure>
 <a href=<?php echo '"'."index-30.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
-<img class="icons" src="shuffle.webp" width="64" title="<?php echo 'Exchange rate for '.$nombre2.' TO '.$nombre1 ?>"></a>
+<img src="shuffle.webp" width="64" title="<?php echo 'Exchange rate for '.$nombre2.' TO '.$nombre1 ?>"></a>
 <figcaption>Switch assets</figcaption>
 </figure>
 </div>
 
-<div class="icons" style="float: right; margin-right: 42px">
+<div class="icons">
 <figure>
 <a href=<?php echo '"'."https://app.tinyman.org/#/swap?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> target="_blank">
-<img class="icons" src="tinyman.png" width="64" title="<?php echo 'Swap in Tinyman '.$nombre1.' TO '.$nombre2 ?>"></a>
-<figcaption>Swap in Tinyman</figcaption>
+<img src="tinyman.png" width="64" title="<?php echo 'Swap in Tinyman '.$nombre1.' TO '.$nombre2 ?>"></a>
+<figcaption>Swap&nbspin Tinyman</figcaption>
 </figure>
 </div>
 </div>
-
+</div>
+<div class="w3-container w3-third w3-card" style="margin-bottom: 30px">
+<b>1 Algorand: <?php echo sprintf("%.3f", $usd)." USD" ?></b>
+</div>
+<div class="w3-container w3-third w3-card" style="margin-bottom: 30px">
+<?php echo "<small><b>".$nombre1." data:<br> Unit name: </b>".$unidad1." <br><b>Total supply: </b>".$cantidad1." ".$unidad1." <br><b>Decimals: </b>".$decimales1."</small><br>".$infoprecio_assetin."<br><b>Market cap: </b>".$marketcap_assetin."</small>"; if (!filter_var($url1, FILTER_VALIDATE_URL) === false) { echo("<br><small><b>URL:</b> <a href=".$url1." target=\"_blank\">".$url1."</a></small>"); } ?>
+</div>
+<div class="w3-container w3-third w3-card" style="margin-bottom: 30px">
+<?php echo "<small><b>".$nombre2." data:<br> Unit name: </b>".$unidad2." <br><b>Total supply: </b>".$cantidad2." ".$unidad2." <br><b>Decimals: </b>".$decimales2."</small><br>".$infoprecio_assetout."<br><b>Market cap: </b>".$marketcap_assetout."</small>"; if (!filter_var($url2, FILTER_VALIDATE_URL) === false) { echo("<br><small><b>URL:</b> <a href=".$url2." target=\"_blank\">".$url2."</a></small>"); } ?>
+</div>
+<div class="w3-container w3-third w3-card" style="margin-bottom: 30px">
+<h3>View assets in AlgoExplorer</h3>
+<?php if ($asset_in!="0") { echo "<a href=https://algoexplorer.io/asset/".$asset_in." target=\"_blank\">View ".$nombre1." on AlgoExplorer</a><br>"; }
+if ($asset_out!="0") { echo "<a href=https://algoexplorer.io/asset/".$asset_out." target=\"_blank\">View ".$nombre2." on AlgoExplorer</a>"; } ?> </div>
 <div class="w3-container w3-third">
-<img src="compatible.webp" title="URLs are compatible so you can c&amp;p">
-<p><small>Tinyman and FreeTinycharts URLs are compatible so you can copy&amp;paste in both directions</small></p>
+<img src="compatible.webp" title="URLs are compatible so you can c&amp;p" style="width:300px"> <p><small>Tinyman and FreeTinycharts URLs are compatible so you can copy&amp;paste in both directions</small></p>
+<p><small>Missing old charts? Still avaliable on <a href="https://freetinycharts.ovh/old/">https://freetinycharts.ovh/old</a></small></p>
 </div>
 </div>
 
-<script>
-const labels = [
-<?php if ($result4->num_rows > 0) { while($row = $result4->fetch_assoc()) { echo "'". $row["fecha"]. "', "; } } else { echo "Error! You choosed non existing pairs."; } ?>
 
-];
-const data = {
-  labels: labels,
-  datasets: [{
-    label: <?php echo "'Exchange rate for ".$nombre1." TO ".$nombre2."'"; ?>,
-    borderColor: 'rgb(75, 192, 192)',
-    data: [
-<?php if ($result5->num_rows > 0) { while($row = $result5->fetch_assoc()) { echo sprintf("%.10f",$row["precio"]). ", "; } } else { echo "Error! You choosed non existing pairs."; } ?>
-],
-  }]
-};
+<script>
+    const array_fechas = [];
+    const array_fechas_f = [];
+    var resultado_fechas = [ <?php if ($result4->num_rows > 0) { while($row = $result4->fetch_assoc()) { echo "'". $row["fecha"]. "', "; } } else { echo "Error! You choosed non existing pairs."; } ?>];
+    for(var i=0; i<resultado_fechas.length; i++){
+    array_fechas.push(convertFromStringToDate (resultado_fechas[i])); }
+    for(var i=0; i<array_fechas.length; i++){
+    array_fechas_f.push(array_fechas[i].format("dd/MM/yyy hh:mm")); }
 </script>
 
 <script>
-const config = {
-  type: 'line',
-  data: data,
-  options: {
-responsive:false,
-maintainAspectRatio: true,
-scales: { yAxes: [{ ticks: { beginAtZero: true }, afterDataLimits(scale) { scale.max = scale.max * 2; } }] } }
-};
-</script>
+var options = {
+  chart: {
+    type: 'line',
+    height: 600
+  },
+  series: [{
+    name: <?php echo "'1 ".$nombre1." TO ".$nombre2."'"; ?>,
+    data: [<?php echo implode(", ", $resultado_precios); ?>]
+  }],
+  xaxis: {
+    categories: array_fechas_f
+  },
+  yaxis: {
+     title: {
+          text: <?php echo "'".$nombre1." TO ".$nombre2."'"; ?>, 
+          },
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 2
+  }
+}
 
-<script>
-  var myChart = new Chart(
-    document.getElementById('grafica'),
-    config
-  );
+var chart = new ApexCharts(document.querySelector("#grafica"), options);
+
+chart.render();
 </script>
 <br>
 <br>

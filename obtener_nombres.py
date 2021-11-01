@@ -18,7 +18,7 @@ cursor_pares = dbpares.cursor()
 for elemento in lista_pares:
 	for par in elemento:
 		if par != 0:
-			print(par)
+#			print(par)
 			respuesta_algoexplorer = requests.get('https://algoexplorerapi.io/idx2/v2/assets?asset-id=' + str(par))
 			respuesta_algoexplorer_p1 = respuesta_algoexplorer.text
 			respuesta_algoexplorer_p2 = json.loads(respuesta_algoexplorer_p1)

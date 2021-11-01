@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^api/([a-zA-Z_-]*)$ index.php?name=$1 [NC,L]

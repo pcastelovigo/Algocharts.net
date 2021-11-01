@@ -1,5 +1,5 @@
 div.icons {
-width: 150px;
+width: 100px;
 display: inline-block;
 }
 image.icons {
@@ -7,18 +7,20 @@ image.icons {
   margin-left: auto;
   margin-right: auto;
 }
+
 figcaption {
 text-align: center;
-}
-.coin_icon > img {
-    height: 30px;
-    max-height: 30px;
 }
 .principal {
 width: 1360px;
 margin: auto;
 }
 .select2-container {
-    width: 350px !important;
+    width: 310px !important;
+    margin-bottom: 12px;
 }
-
+.selector_grafica {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+}

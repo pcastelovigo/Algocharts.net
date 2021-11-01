@@ -14,6 +14,13 @@ function change_asset()
 			});
 }
 
+function convertFromStringToDate(responseDate) {
+    let dateComponents = responseDate.split(' ');
+    let datePieces = dateComponents[0].split("/");
+    let timePieces = dateComponents[1].split(":");
+    return(new Date(Date.UTC(datePieces[2], (datePieces[1] - 1), datePieces[0],
+                         timePieces[0], timePieces[1], 0))) }
+
 function Goto() {
   var x = document.getElementById("ASSET-IN").value;
   var y = document.getElementById("ASSET-OUT").value;
