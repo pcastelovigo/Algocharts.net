@@ -6,9 +6,11 @@ hay_next_token = True
 lista_pool_creator = []
 lista_pools = []
 
+sesion = requests.Session()
+
 def obtenerpool1():
     global next_token, hay_next_token
-    obtener_pools = requests.get('https://algoexplorerapi.io/idx2/v2/assets?name=Tinyman%20Pool')
+    obtener_pools = sesion.get('https://algoexplorerapi.io/idx2/v2/assets?name=Tinyman%20Pool')
     obtener_pools_p2 = json.loads(obtener_pools.text)
     next_token = obtener_pools_p2["next-token"]
     tamaño_dict = len(obtener_pools_p2['assets'])
@@ -18,7 +20,7 @@ def obtenerpool1():
 
 def obtenerpool2():
     global next_token, hay_next_token
-    obtener_pools = requests.get('https://algoexplorerapi.io/idx2/v2/assets?name=Tinyman%20Pool&next=' + next_token )
+    obtener_pools = sesion.get('https://algoexplorerapi.io/idx2/v2/assets?name=Tinyman%20Pool&next=' + next_token )
     obtener_pools_p2 = json.loads(obtener_pools.text)
     if 'next-token' in obtener_pools_p2.keys():
         next_token = obtener_pools_p2["next-token"]
@@ -39,7 +41,7 @@ tamaño_lista = len(lista_pools)
 for i in range(tamaño_lista):
     par_assets = []
     par_assets.clear()
-    obtener_assets = requests.get('https://algoexplorerapi.io/v2/accounts/' + lista_pool_creator[i])
+    obtener_assets = sesion.get('https://algoexplorerapi.io/v2/accounts/' + lista_pool_creator[i])
     obtener_assets_p2 = json.loads(obtener_assets.text)
     tamaño_dict = len(obtener_assets_p2['assets'])
     for j in range(tamaño_dict):

@@ -18,7 +18,8 @@ if(isset($_GET['asset_in']))
 function response($status,$status_message,$data)
 {
 	header("HTTP/2 ".$status);
-	header('Access-Control-Allow-Origin: *');	
+	header('Access-Control-Allow-Origin: *');
+	
 	$response['status']=$status;
 	$response['status_message']=$status_message;
 	$response['data']=$data;

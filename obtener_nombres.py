@@ -14,12 +14,14 @@ dbpares = mysql.connector.connect(
 with open("lista_pares", "rb") as fp:
 	lista_pares = pickle.load(fp)
 
+diccionario_decimales = {}
+sesion = requests.Session()
 cursor_pares = dbpares.cursor()
 for elemento in lista_pares:
 	for par in elemento:
 		if par != 0:
 #			print(par)
-			respuesta_algoexplorer = requests.get('https://algoexplorerapi.io/idx2/v2/assets?asset-id=' + str(par))
+			respuesta_algoexplorer = sesion.get('https://algoexplorerapi.io/idx2/v2/assets?asset-id=' + str(par))
 			respuesta_algoexplorer_p1 = respuesta_algoexplorer.text
 			respuesta_algoexplorer_p2 = json.loads(respuesta_algoexplorer_p1)
 			nombre, total, unidades, decimales, pagina = "Deleted asset", None, None, None, None
@@ -47,7 +49,12 @@ for elemento in lista_pares:
 			valores = (par, nombre, unidades, pagina, total, decimales)
 			cursor_pares.execute(sql, valores)
 			dbpares.commit()
-			
+			diccionario_decimales.update({par:decimales})
+
+with open("/scripts/decimales", "wb") as fichero:
+	pickle.dump(diccionario_decimales, fichero)
+	fichero.close()
+
 for elemento in lista_pares:
         sql = ("SELECT * FROM pares WHERE assetin = %s AND assetout= %s")
         valores = (int(elemento[0]), int(elemento[1]))

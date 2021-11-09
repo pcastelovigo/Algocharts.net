@@ -1,4 +1,4 @@
-This software is live at https://freetinycharts.ovh
+This software is live at https://algocharts.net
 
 How-to install:
 

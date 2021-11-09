@@ -1,0 +1,46 @@
+div.icons {
+width: 100px;
+display: inline-block;
+}
+image.icons {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+figcaption {
+text-align: center;
+}
+.principal {
+width: 1360px;
+margin: auto;
+}
+.select2-container {
+    width: 310px !important;
+    margin-bottom: 12px;
+}
+.selector_grafica {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+}
+#ads {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+table, th, td {
+border: 1px solid black;
+border-collapse: collapse;
+border-color: #96D4D4;
+}
+tr:nth-child(even) {
+  background-color: #D6EEEE;
+}
+td {
+  vertical-align: middle;
+}
+small {
+padding-right: 3px;
+padding-left: 3px;
+}

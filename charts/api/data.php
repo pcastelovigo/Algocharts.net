@@ -12,6 +12,6 @@ $sql = "SELECT precio FROM ".$name." ORDER BY id DESC LIMIT 1";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) { while($row = $result->fetch_assoc()) { $price = $row["precio"]; } } else { echo "Error! You choosed non existing pairs."; }
 $conn->close();
-return $price;
+return floatval($price);
 }
 ?>

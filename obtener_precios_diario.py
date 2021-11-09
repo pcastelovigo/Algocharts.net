@@ -5,8 +5,13 @@ import requests
 import json
 import pickle
 import mysql.connector
+from mysql.connector import pooling
+from multiprocessing.pool import ThreadPool as PISCINA
 
-dbdiario = mysql.connector.connect(
+
+dbdiario = mysql.connector.pooling.MySQLConnectionPool(
+	pool_name = "pumba",
+	pool_size = 8,
 	host="localhost",
 	user="pablo",
 	password="test1",
@@ -25,8 +30,14 @@ with open("/scripts/lista_pares", "rb") as fp:
 with open("/scripts/decimales", "rb") as fp:
 	decimales = pickle.load(fp)
 decimales.update({0:6})
+piscina_size = 5
 
-for elemento in lista_pares:
+class conexion(object):
+	def __init__(self):
+		codigo=""
+
+
+def worker(elemento):
 	try:
 		ASSET_ID = elemento[0]
 		ALGO_ID = elemento[1]
@@ -38,9 +49,7 @@ for elemento in lista_pares:
 			unidades2 = 6
 			pass
 		client = TinymanMainnetClient(user_address=account['address'])
-#		print(ASSET_ID)
 		ASA = client.fetch_asset(ASSET_ID)
-#		print(ALGO_ID)
 		ALGO = client.fetch_asset(ALGO_ID)
 		pool = client.fetch_pool(ALGO, ASA)
 		try:
@@ -57,10 +66,12 @@ for elemento in lista_pares:
 			cantidad_asset1 = informacion['asset2_reserves']
 		try:
 			precioalgoXasa = float(quote_algoXasa.price*(unidades2/unidades1))
+		except ZeroDivisionError:
+			precioalgoXasa = float(1*unidades2)
+		try:
 			precioasaXalgo = float(quote_asaXalgo.price*(unidades1/unidades2))
 		except ZeroDivisionError:
-			precioalgoXasa = float(1*(unidades2/unidades1))
-			precioasaXalgo = float(1*(unidades1/unidades2))
+			precioasaXalgo = float(1*unidades1)
 		if precioalgoXasa < 0:
 			precioalgoXasa = (1 / unidades1)
 		if precioasaXalgo < 0:
@@ -69,33 +80,41 @@ for elemento in lista_pares:
 		nombre_fichero2 = str(ASSET_ID) + "_" + str(ALGO_ID)
 		ahora = datetime.now()
 		fecha = ahora.strftime("%d/%m/%Y %H:%M")
-		cursor_diario = dbdiario.cursor()
+		conexion = dbdiario.get_connection()
+		cursor_diario = conexion.cursor()
 		sql = "CREATE TABLE IF NOT EXISTS %s (id INT AUTO_INCREMENT PRIMARY KEY, fecha VARCHAR(24) NOT NULL, precio VARCHAR(32) NOT NULL)" % nombre_fichero1
 		cursor_diario.execute(sql)
-		dbdiario.commit()
+		conexion.commit()
 		sql = "CREATE TABLE IF NOT EXISTS %s (id INT AUTO_INCREMENT PRIMARY KEY, fecha VARCHAR(24) NOT NULL, precio VARCHAR(32) NOT NULL)" % nombre_fichero2
 		cursor_diario.execute(sql)
-		dbdiario.commit()
+		conexion.commit()
 		insercion = "INSERT INTO " + nombre_fichero1 + " (fecha, precio) VALUES (%s, %s)"
 		valores = (fecha, precioalgoXasa)
 		cursor_diario.execute(insercion, valores)
-		dbdiario.commit()
+		conexion.commit()
 		insercion = "INSERT INTO " + nombre_fichero2 + " (fecha, precio) VALUES (%s, %s)"
 		valores = (fecha, precioasaXalgo)
 		cursor_diario.execute(insercion, valores)
-		dbdiario.commit()
-		#AQUI
+		conexion.commit()
 		insercion = "INSERT INTO liquidez (pool_id, liqa1, liqa2) VALUES (" + repr(nombre_fichero1) + ", %s, %s) ON DUPLICATE KEY UPDATE liqa1 = %s, liqa2 = %s"
 		valores = (cantidad_asset1, cantidad_asset2, cantidad_asset1, cantidad_asset2)
 		cursor_diario.execute(insercion, valores)
-		dbdiario.commit()
+		conexion.commit()
 		insercion = "INSERT INTO liquidez (pool_id, liqa1, liqa2) VALUES (" + repr(nombre_fichero2) + ", %s, %s) ON DUPLICATE KEY UPDATE liqa1 = %s, liqa2 = %s"
 		valores = (cantidad_asset2, cantidad_asset1, cantidad_asset2, cantidad_asset1)
 		cursor_diario.execute(insercion, valores)
-		dbdiario.commit()
+		conexion.commit()
+		cursor_diario.close()
+		conexion.close()
 
-#print(informacion)
-	except:
+	except Exception as e:
+		#print(e)
 		pass
-cursor_diario.close()
-dbdiario.close()
+
+piscina = PISCINA(piscina_size)
+for elemento in lista_pares:
+	piscina.apply_async(worker, (elemento,))
+
+piscina.close()
+piscina.join()
+
