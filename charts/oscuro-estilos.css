@@ -42,9 +42,12 @@ padding-right: 3px;
 padding-left: 3px;
 }
  body {
-  background-color: black;
+  background: rgb(66, 66, 66);
   color: white;
 }
 .apexcharts-tooltip {
     color: black;
   }
+.apexcharts-legend-text {
+    color: white;
+}

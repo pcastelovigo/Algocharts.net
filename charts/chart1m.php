@@ -1,8 +1,9 @@
 <?php
+header("Refresh:60");
 include 'nombres.php';
 include 'precios.php';
 include 'minute.php';
-include 'include1y.php';
+include 'include1m.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,12 +70,12 @@ $(document).ready(function() {
 <div class="w3-container w3-row">
 
 <div class="w3-twothird w3-container">
-<h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 48h view"; ?></h2>
+<h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 1min view"; ?></h2>
 <div id="grafica" style="height:600px"></div>
 <?php
 $longitud_array = count($resultado_precios);
 if ($longitud_array > 96) { $cambio = ((($resultado_precios[array_key_last($resultado_precios)]-$resultado_precios[$longitud_array-97])/$resultado_precios[$longitud_array-97])*100);
-if ($cambio>0) { echo "<small><b>6 month change:</b> </small><small style=\"color: green;\">".sprintf("%.2f",$cambio)." %</small>"; } else {echo "<small>6 month change: </small><small style=\"color: red;\">".sprintf("%.2f",$cambio)." %</small>"; } } else { echo "<small> 6 month change: No enougth data yet</small>";} ?>
+if ($cambio>0) { echo "<small><b>1 hour change:</b> </small><small style=\"color: green;\">".sprintf("%.2f",$cambio)." %</small>"; } else {echo "<small>1 hour change: </small><small style=\"color: red;\">".sprintf("%.2f",$cambio)." %</small>"; } } else { echo "<small> 1 hour change: No enougth data yet</small>";} ?>
 &nbsp;&nbsp;&nbsp;<small><b> Last value:</b> <?php echo sprintf("%.6f",$valor)." ".$nombre2."</small>&nbsp;&nbsp;&nbsp;".$infoprecio_assetin ?></small>&nbsp;&nbsp;&nbsp;<small><b>Liquidity in pool: </b><?php echo sprintf("%.2f",$liqa2)." ".$unidad1.", ".sprintf("%.2f",$liqa1)." ".$unidad2.""; ?> </small>
 <div class="w3-bar w3-indigo selector_grafica w3-round-xlarge" id="selecion_graficas" style="margin-top: 10px; margin-bottom: 10px">
 <?php if (in_array($asset_in, $minute)) { echo "<a href=".'"'."chart1m.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"'." class=\"w3-bar-item w3-button\" style=\"margin: auto\">1min chart</a>"; } ?>
@@ -87,7 +88,7 @@ if ($cambio>0) { echo "<small><b>6 month change:</b> </small><small style=\"colo
 <div class="w3-container w3-row">
 <div class="icons">
 <figure>
-<a href=<?php echo '"'."chart-1y.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
+<a href=<?php echo '"'."chart.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
 <img src="shuffle.webp" width="64" title="<?php echo 'Exchange rate for '.$nombre2.' TO '.$nombre1 ?>"></a>
 <figcaption>Switch assets</figcaption>
 </figure>

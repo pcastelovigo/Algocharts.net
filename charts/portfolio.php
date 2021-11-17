@@ -10,7 +10,7 @@ setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/");
 <title>AlgoCharts - Portfolio tracker</title>
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link id="theme" rel="stylesheet" href="claro-estilos.css?v=1.13">
+<link id="theme" rel="stylesheet" href="claro-estilos.css?v=1.16">
 <meta name="description" content="Algocharts portfolio tracker allows you to grab your Algorand financial position in just one place.">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="scripts.js?v=1.2"></script>
@@ -23,7 +23,6 @@ setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/");
 <div class="w3-container">
 <h1>AlgoCharts portfolio tracker</h1>
 <p> Insert your Algorand address (or any other address) and get data about total monetary value of held assets.</p>
-
 <div class="w3-center w3-container">
 <form action="portfolio.php" method="get">
 <?php if(isset($_COOKIE['portfolio'])) { echo "<input type=\"text\" name=\"algoaddr\" value=\"".$_COOKIE['portfolio']."\"/>"; } else { echo "<input type=\"text\" name=\"algoaddr\" placeholder=\"Algorand Address\" />"; } ?>
@@ -35,6 +34,11 @@ setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/");
 <?php if (isset($_GET['algoaddr'])) { echo "<input type=\"button\" value=\"Don't show no value assets\" style=\"margin-bottom:12px; vertical-align: middle; line-height: 28px\" onclick=\"borrarvacios()\">"; } ?>
 </div>
 
+<div class="w3-container" id="pie" style="width: 320px; margin: auto;">
+
+</div>
+
+
 <div class="w3-container" id="tabla">
 
 <table id="tabla1" style="margin: 0 auto; margin-top: 20px;">
@@ -45,6 +49,7 @@ setcookie($cookie_name, $cookie_value, time() + (86400 * 30), "/");
 <th onclick="sortTable(3)">USD Value  ⇕</th>
 <th onclick="sortTable(4)">Total value ⇕</th>
 <th onclick="sortTable(5)">24h change ⇕</th>
+<th class="w3-hide-small">Tinyman</th>
 </tr>
 <?php
 if (isset($_GET['algoaddr'])) {
@@ -79,6 +84,8 @@ $dbname = "precios_diario"; $conn2 = new mysqli($servername, $username, $passwor
 if ($conn2->connect_error) {die("Connection failed: " . $conn2->connect_error);}
 
 $total_value = 0;
+$your_money = array();
+$your_asset = array();
 
 for ($i = 0; $i <= 100; $i++) {
     if (!isset($lista_assets[$i])) { break; } else {
@@ -89,22 +96,62 @@ if ($resultZ->num_rows > 0) { while($row = $resultZ->fetch_assoc()) { $nombre1 =
 $resultado_precios = array();
 $sqlT = "SELECT precio FROM (SELECT * FROM ".$lista_assets[$i]."_0 ORDER BY id DESC LIMIT 96) t2 ORDER BY t2.id ASC";
 $resultT = $conn2->query($sqlT);
-if ($resultT->num_rows > 0) { while($row = $resultT->fetch_assoc()) { $resultado_precios[] = $row['precio']; } } else { $resultado_precios[95] = 0; $resultado_precios[0] = 0; }
-
+if ($resultT->num_rows > 0) { while($row = $resultT->fetch_assoc()) { $resultado_precios[] = $row['precio']; } } else { $resultado_precios[0] = 0; }
+$longitud_array = count($resultado_precios);
 if ($nombre1 != "No asset data") { echo "<tr><td><a class=\"orden\" href=\"chart.php?asset_in=".$lista_assets[$i]."&amp;asset_out=0\">".$nombre1.$verificado1."</a><br><small class=\"numerito\">".$lista_assets[$i]."</small></td>"; } else { echo "<tr><td class=\"orden\">".$nombre1."<br><small class=\"numerito\">".$lista_assets[$i]."</small></td>"; }
 $lista_cantidades[$i] = $lista_cantidades[$i]/(1*(10**$decimales1));
 echo "<td style=\"text-align: right\"><small class=\"orden\">".$lista_cantidades[$i]." ".$unidad1."</small></td>";
-echo "<td class=\"w3-hide-small\" style=\"text-align: right\"><small class=\"orden\">".sprintf("%.6f",$resultado_precios[95])."Ⱥ</small></td>";
-echo "<td style=\"text-align: right\"><small class=\"orden\">".sprintf("%.3f",$resultado_precios[95]*$usd)." USD</small></td>";
-echo "<td style=\"text-align: right\"><small class=\"orden valortotal\">".sprintf("%.2f",$lista_cantidades[$i]*$resultado_precios[95]*$usd)." USD</small></td>";
-if (isset($resultado_precios[95])) { if ($resultado_precios[95] != 0) { $cambio = ((($resultado_precios[95]-$resultado_precios[0])/$resultado_precios[0])*100); } else $cambio = 0; }
-if (isset($resultado_precios[95])) { if ($cambio>0) { echo "<td style=\"color: green;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td></tr>"; } else { echo "<td style=\"color: red;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td></tr>"; } }
-$total_value = $total_value+($lista_cantidades[$i]*$resultado_precios[95]*$usd);
+echo "<td class=\"w3-hide-small\" style=\"text-align: right\"><small class=\"orden\">".sprintf("%.6f",$resultado_precios[array_key_last($resultado_precios)])."Ⱥ</small></td>";
+echo "<td style=\"text-align: right\"><small class=\"orden\">".sprintf("%.3f",$resultado_precios[array_key_last($resultado_precios)]*$usd)." USD</small></td>";
+echo "<td style=\"text-align: right\"><small class=\"orden valortotal\">".sprintf("%.2f",$lista_cantidades[$i]*$resultado_precios[array_key_last($resultado_precios)]*$usd)." USD</small></td>";
+if ($longitud_array > 94) { $cambio = ((($resultado_precios[array_key_last($resultado_precios)]-$resultado_precios[$longitud_array-95])/$resultado_precios[$longitud_array-95])*100); } else { $cambio = 0; }
+if ($cambio>0) { echo "<td style=\"color: green;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td>"; } else { echo "<td style=\"color: red;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td>"; }
+echo "<td class=\"w3-hide-small\" style=\"text-align:left\"><a href=\"https://app.tinyman.org/#/swap?asset_in=".$lista_assets[$i]."&amp;asset_out=0\">Sell</a></td></tr>";
+$total_value = $total_value+($lista_cantidades[$i]*$resultado_precios[array_key_last($resultado_precios)]*$usd);
+if (sprintf("%.2f",$lista_cantidades[$i]*$resultado_precios[array_key_last($resultado_precios)]*$usd) > 0) { $your_money[] = (sprintf("%.2f",$lista_cantidades[$i]*$resultado_precios[array_key_last($resultado_precios)]*$usd)); $your_asset[] = htmlspecialchars($nombre1, ENT_QUOTES); }
 } } }
+if (sizeof($your_money) > 0 ) { $your_money[] = sprintf("%.2f", (( $algorand_en_cuenta/1000000)*$usd)); $your_asset[] = "Algorand"; }
 ?>
 </table>
 <br>
 </div>
+
+    <script>
+    const themeStylesheet = document.getElementById('theme');
+    const storedTheme = localStorage.getItem('theme');
+    if(storedTheme){
+        themeStylesheet.href = storedTheme;
+    }
+if (themeStylesheet.href.includes('oscuro')) { var modo = 'dark'; } else { var modo = 'light'; }
+        var options = {
+          series:  [ <?php echo implode(", ", $your_money); ?> ],
+          chart: {
+          width: 500,
+	  height: 600,
+          type: 'pie',
+        },
+        labels:  [ <?php echo "'".implode("', '", $your_asset)."'"; ?> ],
+	theme: { mode: modo },
+        responsive: [{
+          breakpoint: 480,
+          options: {
+            chart: {
+              width: '100%',
+	      height: 600
+            },
+            legend: {
+              position: 'bottom'
+            },
+          }
+        }]
+        };
+
+<?php if (sizeof($your_money) > 0 ) { echo " var chart = new ApexCharts(document.querySelector(\"#pie\"), options); chart.render();"; } ?>
+      
+      
+    </script>
+
+
 <div class="w3-container">
 <table style="margin: 0 auto; margin-top: 15px;">
 <?php
@@ -120,6 +167,7 @@ $conn2->close();
 </table>
 </div>
 <br><br><br>
+<p id="theme-toggle" style="cursor: pointer;"><u>Toggle dark/light mode</u></p>
 <footer>
 <div class="w3-bar w3-indigo" style="margin: auto; position:relative;" id="paginatop">
 <a href="index.php" class="w3-bar-item w3-button w3-padding-16">Main page</a>

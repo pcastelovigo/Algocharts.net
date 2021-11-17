@@ -1,8 +1,9 @@
 <?php
+header("Refresh:240");
 include 'nombres.php';
 include 'precios.php';
 include 'minute.php';
-include 'include1y.php';
+include 'include1m.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,11 +56,11 @@ $(document).ready(function() {
 <select class="selector" id="ASSET-OUT">
 <option value="0">0 - Algorand</option>
 </select>
-<input type="button" value="Go to chart" style="margin-bottom:12px; vertical-align: middle; line-height: 28px" onclick = "Goto()" />
+<input type="button" value="Go to chart" style="margin-bottom:12px; vertical-align: middle; line-height: 28px" onclick = "Goto2()" />
 <p><small>If no chart shown: Pool has NOT liquidity or deleted asset. Verified assets are shown with a ✅ mark.</small><p>
 </div>
 
-<div class="w3-container w3-third w3-center w3-card" style="margin-bottom:20px">
+<div class="w3-container w3-third w3-center w3-card" style="margin-bottom: 20px;">
 <small>These months we are sponsored by...</small><br>
 <a href="https://app.tinyman.org/#/swap?asset_in=383581973&asset_out=0"><img src="xbull.jpg"></a>
 </div>
@@ -69,12 +70,12 @@ $(document).ready(function() {
 <div class="w3-container w3-row">
 
 <div class="w3-twothird w3-container">
-<h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 48h view"; ?></h2>
+<h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 1min view"; ?></h2>
 <div id="grafica" style="height:600px"></div>
 <?php
 $longitud_array = count($resultado_precios);
 if ($longitud_array > 96) { $cambio = ((($resultado_precios[array_key_last($resultado_precios)]-$resultado_precios[$longitud_array-97])/$resultado_precios[$longitud_array-97])*100);
-if ($cambio>0) { echo "<small><b>6 month change:</b> </small><small style=\"color: green;\">".sprintf("%.2f",$cambio)." %</small>"; } else {echo "<small>6 month change: </small><small style=\"color: red;\">".sprintf("%.2f",$cambio)." %</small>"; } } else { echo "<small> 6 month change: No enougth data yet</small>";} ?>
+if ($cambio>0) { echo "<small><b>24h change:</b> </small><small style=\"color: green;\">".sprintf("%.2f",$cambio)." %</small>"; } else {echo "<small>24h change: </small><small style=\"color: red;\">".sprintf("%.2f",$cambio)." %</small>"; } } else { echo "<small> 24h change: No enougth data yet</small>";} ?>
 &nbsp;&nbsp;&nbsp;<small><b> Last value:</b> <?php echo sprintf("%.6f",$valor)." ".$nombre2."</small>&nbsp;&nbsp;&nbsp;".$infoprecio_assetin ?></small>&nbsp;&nbsp;&nbsp;<small><b>Liquidity in pool: </b><?php echo sprintf("%.2f",$liqa2)." ".$unidad1.", ".sprintf("%.2f",$liqa1)." ".$unidad2.""; ?> </small>
 <div class="w3-bar w3-indigo selector_grafica w3-round-xlarge" id="selecion_graficas" style="margin-top: 10px; margin-bottom: 10px">
 <?php if (in_array($asset_in, $minute)) { echo "<a href=".'"'."chart1m.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"'." class=\"w3-bar-item w3-button\" style=\"margin: auto\">1min chart</a>"; } ?>
@@ -87,7 +88,7 @@ if ($cambio>0) { echo "<small><b>6 month change:</b> </small><small style=\"colo
 <div class="w3-container w3-row">
 <div class="icons">
 <figure>
-<a href=<?php echo '"'."chart-1y.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
+<a href=<?php echo '"'."chart-candle.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
 <img src="shuffle.webp" width="64" title="<?php echo 'Exchange rate for '.$nombre2.' TO '.$nombre1 ?>"></a>
 <figcaption>Switch assets</figcaption>
 </figure>
@@ -142,29 +143,34 @@ if ($asset_out!="0") { echo "<a href=https://algoexplorer.io/asset/".$asset_out.
         themeStylesheet.href = storedTheme;
     }
 if (themeStylesheet.href.includes('oscuro')) { var modo = 'dark'; } else { var modo = 'light'; }
-var options = {
-  chart: {
-    type: 'line',
-    height: 600
-  },
-  series: [{
-    name: <?php echo "'1 ".htmlspecialchars($nombre1, ENT_QUOTES)." TO ".htmlspecialchars($nombre2, ENT_QUOTES)."'"; ?>,
-    data: [<?php echo implode(", ", $resultado_precios); ?>]
-  }],
-  xaxis: {
-    categories: array_fechas_f
-  },
-  yaxis: {
-     title: {
-          text: <?php echo "'".htmlspecialchars($nombre1, ENT_QUOTES)." TO ".htmlspecialchars($nombre2, ENT_QUOTES)."'"; ?>, 
+ var options = {
+          series: [{
+          data: [
+<?php   $longitud_array = count($resultado_precios);
+for ($i = 0; $i <= $longitud_array - 4; $i+=3) {
+	$valores = array($resultado_precios[($i)], $resultado_precios[($i+1)], $resultado_precios[($i+2)], $resultado_precios[($i+3)]);
+	echo "{ x: array_fechas_f[".$i."], y: [".$resultado_precios[$i].", ".max($valores).", ".min($valores).", ".$resultado_precios[($i+3)]."]},"; } ?>
+]
+        }],
+          chart: {
+          type: 'candlestick',
+          height: 600
+        },
+        theme: { mode: modo },
+        xaxis: {
+          enabled: false
+        },
+        yaxis: {
+	opposite: true,
+          title: {
+            text: <?php echo "'".htmlspecialchars($nombre1, ENT_QUOTES)." TO ".htmlspecialchars($nombre2, ENT_QUOTES)."'"; ?>, 
           },
-  },
-  stroke: {
-    curve: 'smooth',
-    width: 2
-  },
-theme: { mode: modo },
-}
+
+          tooltip: {
+            enabled: true
+          }
+        }
+        };
 
 var chart = new ApexCharts(document.querySelector("#grafica"), options);
 

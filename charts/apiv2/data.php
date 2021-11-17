@@ -16,7 +16,7 @@ if ($resultK->num_rows > 0) { while ($row = $resultK->fetch_assoc()) { $usd = $r
 $resultado_precios = array();
 if ($resultL->num_rows > 0) { while ($row = $resultL->fetch_assoc()) { $resultado_precios[] = $row['precio']; } }
 $conn->close();
-$dbname = "nombres";
+$dbname = "pares";
 $conn = new mysqli($servername, $username, $password, $dbname);
 $sqlJ = "SELECT * FROM nombres where asset_id='".$asset_in."'";
 $resultJ = $conn->query($sqlJ);

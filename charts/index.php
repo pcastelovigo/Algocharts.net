@@ -19,7 +19,7 @@ if ($resultR->num_rows > 0) { while ($row = $resultR->fetch_assoc()) { $pools_bi
 $dbname = "pares";
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {die("Connection failed: " . $conn->connect_error);}
-$sql3 = "select asset_id, nombre, verify from nombres where asset_id > 0";
+$sql3 = "select asset_id, nombre, unidad, verify from nombres where asset_id > 0";
 $result3 = $conn->query($sql3);
 $conn->close();
 
@@ -67,7 +67,7 @@ $(document).ready(function() {
 
         <select class="selector" id="ASSET-IN" onchange="change_asset();">
         <option value="330109984">Search asset...</option>
-<?php if ($result3->num_rows > 0) { while ($row = mysqli_fetch_array($result3)) { echo "<option value=" . $row['asset_id'] . ">" . $row['asset_id'] ." - ". $row['nombre'].$row['verify']. "</option>"; } } ?>
+<?php if ($result3->num_rows > 0) { while ($row = mysqli_fetch_array($result3)) { echo "<option value=" . $row['asset_id'] . ">" . $row['asset_id'] ." - $".$row['unidad']." - ". $row['nombre'].$row['verify']. "</option>"; } } ?>
         </select>
 <select class="selector" id="ASSET-OUT">
 <option value="0">0 - Algorand</option>
@@ -111,7 +111,7 @@ $i = 0;
 $resultado_precios = array();
 $sqlT = "SELECT precio FROM (SELECT * FROM ".$pools_billboard[$i]." ORDER BY id DESC LIMIT 196) t2 ORDER BY t2.id ASC";
 $resultT = $conn1->query($sqlT);
-if ($resultT->num_rows > 0) { while($row = $resultT->fetch_assoc()) { $resultado_precios[] = sprintf("%.8f", $row['precio']); } }
+if ($resultT->num_rows > 0) { while($row = $resultT->fetch_assoc()) { $resultado_precios[] = sprintf("%.12f", $row['precio']); } }
 
 $num_asset = substr($pools_billboard[$i], 0, strlen($pools_billboard[$i])-2);
 $sqlY = "SELECT * from nombres where asset_id=".$num_asset."";
@@ -123,15 +123,16 @@ $sqlU = "SELECT * from liquidez where pool_id='".$pools_billboard[$i]."'";
 $resultU = $conn1->query($sqlU);
 if ($resultU->num_rows > 0) { while($row = $resultU->fetch_assoc()) { $liquidez = $row['liqa1']; } }
 
-echo "<tr><td><a class=\"orden\" href=\"chart.php?asset_in=".$num_asset."&amp;asset_out=0\">".$nombre_asset.$verificado1."</a><br><small class=\"numerito\">".$num_asset."</small></td>";
-echo "<td class=\"w3-hide-small\"><small class=\"orden\">".sprintf("%.6f",$resultado_precios[195])."Ⱥ</small></td>";
-echo "<td class=\"w3-hide-small\"><small class=\"orden\">".sprintf("%.3f",$resultado_precios[195]*$usd)."USD</small></td>";
+$longitud_array = count($resultado_precios);
+echo "<tr><td><a class=\"orden\" href=\"chart1m.php?asset_in=".$num_asset."&amp;asset_out=0\">".$nombre_asset.$verificado1."</a><br><small class=\"numerito\">".$num_asset."</small></td>";
+echo "<td class=\"w3-hide-small\"><small class=\"orden\">".sprintf("%.6f",$resultado_precios[$longitud_array-1])."Ⱥ</small></td>";
+echo "<td class=\"w3-hide-small\"><small class=\"orden\">".sprintf("%.3f",$resultado_precios[$longitud_array-1]*$usd)."USD</small></td>";
 echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"text-align: right\"><small class=\"orden\">".sprintf("%.0f",($liquidez/1000000))."Ⱥ</small></td>";
-if (isset($resultado_precios[195])) { $cambio = ((($resultado_precios[195]-$resultado_precios[99])/$resultado_precios[99])*100); }
-if (isset($resultado_precios[195])) { $cambio1h = ((($resultado_precios[195]-$resultado_precios[191])/$resultado_precios[191])*100); }
-if (isset($resultado_precios[195])) { if ($cambio1h>0) { echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"color: green;text-align: right\"><small class=\"orden\" >".sprintf("%.2f",$cambio1h)."%</small></td>"; } else { echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"color: red;text-align: right\"><small class=\"orden\" >".sprintf("%.2f",$cambio1h)."%</small></td>"; } } else { echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"text-align: right\"><small class=\"orden\">0%</small></td>"; }
-if (isset($resultado_precios[195])) { if ($cambio>0) { echo "<td style=\"color: green;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td>"; } else { echo "<td style=\"color: red;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td>"; } } else { echo "<td style=\"text-align: right\"><small class=\"orden\">0%</small></td>"; }
-if (isset($resultado_precios[195])) { echo "<td class=\"w3-hide-small\" style=\"text-align: right\"><small class=\"orden\">".sprintf("%.0f",($resultado_precios[195]*$cantidad1*$usd))." USD</small></td></tr>"; } else { echo "<td class=\"w3-hide-small\" style=\"text-align: right\"><small class=\"orden\">0 USD</small></td></tr>"; }
+if ($longitud_array > 96) { $cambio = ((($resultado_precios[array_key_last($resultado_precios)]-$resultado_precios[$longitud_array-97])/$resultado_precios[$longitud_array-97])*100); }
+if ($longitud_array > 5) { $cambio1h = ((($resultado_precios[array_key_last($resultado_precios)]-$resultado_precios[$longitud_array-5])/$resultado_precios[$longitud_array-5])*100); }
+if ($longitud_array > 5) { if ($cambio1h>0) { echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"color: green;text-align: right\"><small class=\"orden\" >".sprintf("%.2f",$cambio1h)."%</small></td>"; } else { echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"color: red;text-align: right\"><small class=\"orden\" >".sprintf("%.2f",$cambio1h)."%</small></td>"; } } else { echo "<td class=\"w3-hide-small w3-hide-medium\" style=\"text-align: right\"><small class=\"orden\">0%</small></td>"; }
+if ($longitud_array > 96) { if ($cambio>0) { echo "<td style=\"color: green;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td>"; } else { echo "<td style=\"color: red;text-align: right\"><small class=\"orden\">".sprintf("%.2f",$cambio)."%</small></td>"; } } else { echo "<td style=\"text-align: right\"><small class=\"orden\">0%</small></td>"; }
+if ($longitud_array > 0) { echo "<td class=\"w3-hide-small\" style=\"text-align: right\"><small class=\"orden\">".sprintf("%.0f",($resultado_precios[$longitud_array-1]*$cantidad1*$usd))." USD</small></td></tr>"; } else { echo "<td class=\"w3-hide-small\" style=\"text-align: right\"><small class=\"orden\">0 USD</small></td></tr>"; }
             $i++;
         }
 $conn1->close();
@@ -144,7 +145,7 @@ $conn2->close();
 <b>1 Algorand: <?php echo sprintf("%.3f", $usd)." USD" ?></b>
 <p><a href="portfolio.php">Portfolio calculator🌟</a></p>
 <p><a href="tokenprogram.html">Token program</a></p>
-<p id="theme-toggle" style="cursor: pointer;"><u>Toggle dark/ligth mode</u></p>
+<p id="theme-toggle" style="cursor: pointer;"><u>Toggle dark/light mode</u></p>
 </div>
 <div class="w3-container w3-card w3-third" style="max-width: 360px; margin-bottom: 30px; margin-top: 30px; margin-left:1px; margin-right:10px;">
 <small>If no change or market cap: No data yet</small>

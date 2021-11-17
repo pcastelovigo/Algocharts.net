@@ -11,7 +11,7 @@ dbpares = mysql.connector.connect(
 	database="pares"
 	)
 
-with open("lista_pares", "rb") as fp:
+with open("/scripts/lista_pares", "rb") as fp:
 	lista_pares = pickle.load(fp)
 
 diccionario_decimales = {}

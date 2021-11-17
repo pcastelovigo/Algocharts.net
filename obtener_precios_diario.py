@@ -11,7 +11,7 @@ from multiprocessing.pool import ThreadPool as PISCINA
 
 dbdiario = mysql.connector.pooling.MySQLConnectionPool(
 	pool_name = "pumba",
-	pool_size = 8,
+	pool_size = 24,
 	host="localhost",
 	user="pablo",
 	password="test1",
@@ -30,7 +30,7 @@ with open("/scripts/lista_pares", "rb") as fp:
 with open("/scripts/decimales", "rb") as fp:
 	decimales = pickle.load(fp)
 decimales.update({0:6})
-piscina_size = 5
+piscina_size = 16
 
 class conexion(object):
 	def __init__(self):
@@ -45,8 +45,8 @@ def worker(elemento):
 			unidades1 = 1 * pow(10,decimales[ASSET_ID])
 			unidades2 = 1 * pow(10,decimales[ALGO_ID])
 		except KeyError:
-			unidades1 = 6
-			unidades2 = 6
+			unidades1 = 1 * pow(10,0)
+			unidades2 = 1 * pow(10,6)
 			pass
 		client = TinymanMainnetClient(user_address=account['address'])
 		ASA = client.fetch_asset(ASSET_ID)
@@ -76,6 +76,21 @@ def worker(elemento):
 			precioalgoXasa = (1 / unidades1)
 		if precioasaXalgo < 0:
 			precioasaXalgo = (1 / unidades2)
+		if precioasaXalgo == 1.0 and precioalgoXasa == 0.0:
+			try:
+				quote_algoXasa = pool.fetch_fixed_input_swap_quote(ALGO(unidades2*100), slippage=0.01)
+				quote_asaXalgo = pool.fetch_fixed_output_swap_quote(ALGO(unidades2*100), slippage=0.01)
+			except Exception as excepcion:
+				pass
+			try:
+				precioalgoXasa = float(quote_algoXasa.price*(unidades2/unidades1))
+			except ZeroDivisionError:
+				precioalgoXasa = float(1*unidades2)
+			try:
+				precioasaXalgo = float(quote_asaXalgo.price*(unidades1/unidades2))
+			except ZeroDivisionError:
+				precioasaXalgo = float(1*unidades1)
+
 		nombre_fichero1 = str(ALGO_ID) + "_" + str(ASSET_ID)
 		nombre_fichero2 = str(ASSET_ID) + "_" + str(ALGO_ID)
 		ahora = datetime.now()

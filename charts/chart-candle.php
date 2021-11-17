@@ -1,51 +1,8 @@
 <?php
-$servername = "localhost";
-$username = "pablo";
-$password = "test1";
-$asset_in = $_GET['asset_in'];
-$asset_out = $_GET['asset_out'];
-if(!isset($asset_in)) { $asset_in = "330109984"; }
-if(!isset($asset_out)) { $asset_out = "0"; }
-//if(!$_GET){ $asset_in = "330109984"; $asset_out = "0"; }
-
-$dbname = "pares";
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {die("Connection failed: " . $conn->connect_error);}
-$sql = "SELECT * FROM nombres where asset_id=".$asset_in."";
-$sql2 = "SELECT * FROM nombres where asset_id=".$asset_out."";
-$sql3 = "select asset_id, nombre, verify from nombres where asset_id > 0";
-
-$result = $conn->query($sql);
-$result2 = $conn->query($sql2);
-$result3 = $conn->query($sql3);
-$conn->close();
-
-if ($result->num_rows > 0) { while($row = $result->fetch_assoc()) { $nombre1 = $row["nombre"]; $unidad1 = $row["unidad"]; $cantidad1 = $row["cantidad"]; $decimales1 = $row["decimales"]; $url1 = $row["url"]; $verificado1 = $row["verify"]; $telegram1 = $row['telegram']; } } else { echo "Error! You choosed non existing pairs."; }
-if ($result2->num_rows > 0) { while($row = $result2->fetch_assoc()) { $nombre2 = $row["nombre"]; $unidad2 = $row["unidad"]; $cantidad2 = $row["cantidad"]; $decimales2 = $row["decimales"]; $url2 = $row["url"]; $verificado2 = $row["verify"]; $telegram2 = $row['telegram']; } } else { echo "Error! You choosed non existing pairs."; } 
-$cantidad1 = $cantidad1/(1*(10**$decimales1));
-$cantidad2 = $cantidad2/(1*(10**$decimales2));
+include 'nombres.php';
 include 'precios.php';
-
-$dbname = "precios_diario";
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {die("Connection failed: " . $conn->connect_error);}
-$sql4 = "SELECT fecha FROM (SELECT * FROM ".$asset_in."_".$asset_out." ORDER BY id DESC LIMIT 196) t2 ORDER BY t2.id ASC";
-$sql5 = "SELECT precio FROM (SELECT * FROM ".$asset_in."_".$asset_out." ORDER BY id DESC LIMIT 196) t2 ORDER BY t2.id ASC";
-$sql6 = "SELECT * FROM liquidez where pool_id='".$asset_in."_".$asset_out."'";
-$sql7 = "SELECT precio FROM ".$asset_in."_".$asset_out." ORDER BY id DESC LIMIT 1";
-$result4 = $conn->query($sql4);
-$result5 = $conn->query($sql5);
-$result6 = $conn->query($sql6);
-$result7 = $conn->query($sql7);
-$conn->close();
-$resultado_precios = array();
-if ($result5->num_rows > 0) { while($row = $result5->fetch_assoc()) { $resultado_precios[] = sprintf("%.8f", $row['precio']); } }
-if ($result6->num_rows > 0) { while ($row = $result6->fetch_assoc()) { $liqa1 = $row['liqa1']; $liqa2 = $row['liqa2']; } }
-if ($result7->num_rows > 0) { while ($row = $result7->fetch_assoc()) { $valor = $row['precio']; } }
-//Estan invertidos :D
-$liqa2 = $liqa2/(1*(10**$decimales1));
-$liqa1 = $liqa1/(1*(10**$decimales2));
-
+include 'minute.php';
+include 'include15.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,7 +50,7 @@ $(document).ready(function() {
 
         <select class="selector" id="ASSET-IN" onchange="change_asset();">
         <option value="330109984">Search asset...</option>
-<?php if ($result3->num_rows > 0) { while ($row = mysqli_fetch_array($result3)) { echo "<option value=" . $row['asset_id'] . ">" . $row['asset_id'] ." - ". $row['nombre'].$row['verify']. "</option>"; } } ?>
+<?php if ($result3->num_rows > 0) { while ($row = mysqli_fetch_array($result3)) { echo "<option value=" . $row['asset_id'] . ">" . $row['asset_id'] ." - $".$row['unidad']." - ". $row['nombre'].$row['verify']. "</option>"; } } ?>
         </select>
 <select class="selector" id="ASSET-OUT">
 <option value="0">0 - Algorand</option>
@@ -102,7 +59,7 @@ $(document).ready(function() {
 <p><small>If no chart shown: Pool has NOT liquidity or deleted asset. Verified assets are shown with a ✅ mark.</small><p>
 </div>
 
-<div class="w3-container w3-third w3-center w3-card">
+<div class="w3-container w3-third w3-center w3-card" style="margin-bottom: 20px;">
 <small>These months we are sponsored by...</small><br>
 <a href="https://app.tinyman.org/#/swap?asset_in=383581973&asset_out=0"><img src="xbull.jpg"></a>
 </div>
@@ -112,21 +69,25 @@ $(document).ready(function() {
 <div class="w3-container w3-row">
 
 <div class="w3-twothird w3-container">
-<h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 48h view"; ?></h2>
+<h2><?php echo "".$nombre1.$verificado1." TO ".$nombre2.$verificado2." 15min view"; ?></h2>
 <div id="grafica" style="height:600px"></div>
-<?php if (isset($resultado_precios[195])) { $cambio = ((($resultado_precios[195]-$resultado_precios[99])/$resultado_precios[99])*100);
+<?php
+$longitud_array = count($resultado_precios);
+if ($longitud_array > 96) { $cambio = ((($resultado_precios[array_key_last($resultado_precios)]-$resultado_precios[$longitud_array-97])/$resultado_precios[$longitud_array-97])*100);
 if ($cambio>0) { echo "<small><b>24h change:</b> </small><small style=\"color: green;\">".sprintf("%.2f",$cambio)." %</small>"; } else {echo "<small>24h change: </small><small style=\"color: red;\">".sprintf("%.2f",$cambio)." %</small>"; } } else { echo "<small> 24h change: No enougth data yet</small>";} ?>
 &nbsp;&nbsp;&nbsp;<small><b> Last value:</b> <?php echo sprintf("%.6f",$valor)." ".$nombre2."</small>&nbsp;&nbsp;&nbsp;".$infoprecio_assetin ?></small>&nbsp;&nbsp;&nbsp;<small><b>Liquidity in pool: </b><?php echo sprintf("%.2f",$liqa2)." ".$unidad1.", ".sprintf("%.2f",$liqa1)." ".$unidad2.""; ?> </small>
 <div class="w3-bar w3-indigo selector_grafica w3-round-xlarge" id="selecion_graficas" style="margin-top: 10px; margin-bottom: 10px">
-<a href=<?php echo '"'."chart.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">48h chart</a>
-<a href=<?php echo '"'."chart-candle.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">48h candlestick</a>
-<a href=<?php echo '"'."chart-30.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">1 month chart</a>
-<a href=<?php echo '"'."chart-1y.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">1 year chart</a>
+<?php if (in_array($asset_in, $minute)) { echo "<a href=".'"'."chart1m.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"'." class=\"w3-bar-item w3-button\" style=\"margin: auto\">1min chart</a>"; } ?>
+<?php if (in_array($asset_in, $minute)) { echo "<a href=".'"'."chart-candle1m.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"'." class=\"w3-bar-item w3-button\" style=\"margin: auto\">1min candlestick</a>"; } ?>
+<a href=<?php echo '"'."chart.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">15min chart</a>
+<a href=<?php echo '"'."chart-candle.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">15min candlestick</a>
+<a href=<?php echo '"'."chart-30.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">4h chart</a>
+<a href=<?php echo '"'."chart-1y.php?asset_in=".$asset_in."&amp;asset_out=".$asset_out.'"' ?> class="w3-bar-item w3-button" style="margin: auto;">48h chart</a>
 </div>
 <div class="w3-container w3-row">
 <div class="icons">
 <figure>
-<a href=<?php echo '"'."chart.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
+<a href=<?php echo '"'."chart-candle.php?asset_in=".$asset_out."&amp;asset_out=".$asset_in.'"' ?>>
 <img src="shuffle.webp" width="64" title="<?php echo 'Exchange rate for '.$nombre2.' TO '.$nombre1 ?>"></a>
 <figcaption>Switch assets</figcaption>
 </figure>
@@ -146,7 +107,7 @@ if ($cambio>0) { echo "<small><b>24h change:</b> </small><small style=\"color: g
 <p><a href="index.php">Go back to billboard</a></p>
 <p><a href="portfolio.php">Portfolio calculator🌟</a></p>
 <p><a href="tokenprogram.html">Token program</a></p>
-<p id="theme-toggle" style="cursor: pointer;"><u>Toggle dark/ligth mode</u></p>
+<p id="theme-toggle" style="cursor: pointer;"><u>Toggle dark/light mode</u></p>
 </div>
 <div class="w3-container w3-third w3-card" style="margin-bottom: 30px">
 <?php echo "<small><b>".$nombre1." data:<br> Unit name: </b>".$unidad1." <br><b>Total supply: </b>".$cantidad1." ".$unidad1." <br><b>Decimals: </b>".$decimales1."</small><br>".$infoprecio_assetin."<br><b>Market cap: </b>".$marketcap_assetin."</small>"; if (!filter_var($url1, FILTER_VALIDATE_URL) === false) { echo("<br><small><b>URL:</b> <a href=".$url1." target=\"_blank\">".$url1."</a></small>"); } if (!empty($telegram1)) { echo("<br><small><b>Telegram:</b> <a href=".$telegram1." target=\"_blank\">".$telegram1."</a></small>"); }  ?>
@@ -175,12 +136,18 @@ if ($asset_out!="0") { echo "<a href=https://algoexplorer.io/asset/".$asset_out.
 </script>
 
 <script>
+    const themeStylesheet = document.getElementById('theme');
+    const storedTheme = localStorage.getItem('theme');
+    if(storedTheme){
+        themeStylesheet.href = storedTheme;
+    }
+if (themeStylesheet.href.includes('oscuro')) { var modo = 'dark'; } else { var modo = 'light'; }
  var options = {
           series: [{
           data: [
 <?php   $longitud_array = count($resultado_precios);
-for ($i = 0; $i <= $longitud_array - 4; $i+=4) {
-	$valores = array($resultado_precios[$i], $resultado_precios[($i+1)], $resultado_precios[($i+2)], $resultado_precios[($i+3)]);
+for ($i = 0; $i <= $longitud_array - 4; $i+=3) {
+	$valores = array($resultado_precios[($i)], $resultado_precios[($i+1)], $resultado_precios[($i+2)], $resultado_precios[($i+3)]);
 	echo "{ x: array_fechas_f[".$i."], y: [".$resultado_precios[$i].", ".max($valores).", ".min($valores).", ".$resultado_precios[($i+3)]."]},"; } ?>
 ]
         }],
@@ -188,6 +155,7 @@ for ($i = 0; $i <= $longitud_array - 4; $i+=4) {
           type: 'candlestick',
           height: 600
         },
+        theme: { mode: modo },
         xaxis: {
           enabled: false
         },
