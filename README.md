@@ -40,22 +40,22 @@ async_snippet is just a working experiment on using asyncronous load from API re
 
 6. short backend TO-DO
 
--Volume tracking could be done getting current round via API, estimating 24 hour before round and summing all done transfers in pool between those rounds. Volume could be calculated backwards!
+- Volume tracking could be done getting current round via API, estimating 24 hour before round and summing all done transfers in pool between those rounds. Volume could be calculated backwards!
 
--Adding multithreading to asset data fetching as it starts to be a long proccess
+- Adding multithreading to asset data fetching as it starts to be a long proccess
 
--Exclude bugged pools from being readed and exclude already readed assets from obtener_nombres.py would be optimal.
+- Exclude bugged pools from being readed and exclude already readed assets from obtener_nombres.py would be optimal.
 
--Study switching or allowing using undocumented tinyman api to get pools.
+- Study switching or allowing using undocumented tinyman api to get pools.
 
--Translate all variable names into English. I am sorry, dudes.
+- Translate all variable names into English. I am sorry, dudes.
 
 
 7. Fast How-to install:
 
-In a linux box with apache,php & mysql, as root:
+- In a linux box with apache,php & mysql, as root:
 
-Unpack zip
+- Unpack zip
 
 
 mkdir /scripts/ && mkdir /scripts/live/
@@ -65,7 +65,7 @@ cp *.py /scripts/ && cp live/* /scripts/live
 cp -r charts/* /var/www/html/
 
 
-Enter mysql console
+- Enter mysql console
 
 create user 'pablo'@'localhost' identified by 'test1';  // remember to change this and change them in all PHP and PY files.
 
@@ -94,28 +94,28 @@ flush privileges;
 exit
 
 
-Then bootstrap software obtaining pairs, decimals file, populating asset info database and first round of prices
+- Then bootstrap software obtaining pairs, decimals file, populating asset info database and first round of prices
 
 cd /scripts/
 
 python3 obtener_pares.py && python3 obtener_nombres.py && python3 obtener_precios_diario.py
 
 
-Finally edit crontab to grab prices and new pools automatically
+- Finally edit crontab to grab prices and new pools automatically. Cron can be substituted by an infinite loop shell script, and scripts are time-agnostic so find the refresh time that works for you and change frontend accordingly
 
 crontab -e
 
-and add these lines (my setup):
+- and add these lines (my setup):
 
-*/15 * * * * python3 /scripts/obtener_precios_diario.py
+\ */15 * * * * python3 /scripts/obtener_precios_diario.py
 
-* */12 * * * python3 /scripts/obtener_nombres.py
-* 
-30 */12 * * *  python3 /scripts/obtener_pares.py
+\ * */12 * * * python3 /scripts/obtener_nombres.py
 
-*/15 * * * * python3 /scripts/live/obtener_pools_vivo.py
+\ * 30 */12 * * *  python3 /scripts/obtener_pares.py
 
-* * * * * python3 /scripts/live/obtener_precios_vivo.py
+\ */15 * * * * python3 /scripts/live/obtener_pools_vivo.py
+
+\ * * * * * python3 /scripts/live/obtener_precios_vivo.py
 
 
 Finally, change user and password in your PHP files and hardcoded link on scripts.js
