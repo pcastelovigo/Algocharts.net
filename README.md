@@ -77,7 +77,8 @@ create database pares;
 
 use pares;
 
-CREATE TABLE nombres (asset_id INT NOT NULL PRIMARY KEY, nombre VARCHAR(32) NOT NULL, unidad VARCHAR(8), url VARCHAR(32), cantidad INT, verify VARCHAR(1), telegram VARCHAR(50));
+CREATE TABLE nombres (asset_id INT NOT NULL PRIMARY KEY, nombre VARCHAR(32) NOT NULL, unidad VARCHAR(8), url VARCHAR(32), cantidad BIGINT unsigned, decimales INT, verify VARCHAR(1), telegram VARCHAR(50));
+
 
 CREATE TABLE pares (id INT NOT NULL, assetin INT NOT NULL, assetout INT NOT NULL, nombre varchar(32) DEFAULT NULL, verify VARCHAR(1) DEFAULT '');
 
