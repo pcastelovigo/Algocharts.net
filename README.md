@@ -23,7 +23,7 @@ This script gets price data from Tinyman SDK (that also uses Algoexplorer in the
 To allow multithreading, first of all it defines a database connection pool. Uses an empty address mnemonic to generate a private key, and loads pairs Python list and decimals Python dictionary generated in previous scripts to get all prices in a big, multithreaded for loop.
 Code is full of try-except catches to workarround the unknown when I wrote the code Tinyman bug ( https://docs.tinyman.org/known-issues/2021-11-12-pool-overflow-errors ) For big-value assets without decimals, it retries with a bigger Algo amount. Another solution is to ask for sell and not buy prices.
 Finally it creates new DB tables if they not exists and writes UTC date string, price and last liquidity data to database.
-Working speed can be increased or reduced changing "piscina_size" and "pool_size" values, but it can eat computer time very fast so be careful. Also remember to set the database connection pool bigger than the multithread worker pool or script will run out of avaliable sockets.
+Working speed can be increased or reduced changing "piscina_size" and "pool_size" values, but it can eat computer time very fast so be careful. Also remember to set the database connection pool bigger than the multithread worker pool or script will run out of avaliable sockets. Uncomment line #126 for debugging.
 
 4. PHP frontend
 
