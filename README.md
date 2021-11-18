@@ -60,7 +60,7 @@ async_snippet is just a working experiment on using asyncronous load from API re
 
 mkdir /scripts/ && mkdir /scripts/live/
 
-cp *.py /scripts/ && cp live/* /scripts/live
+cp \*.py /scripts/ && cp live/* /scripts/live
 
 cp -r charts/* /var/www/html/
 
