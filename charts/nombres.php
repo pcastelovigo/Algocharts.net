@@ -6,6 +6,8 @@ $asset_in = $_GET['asset_in'];
 $asset_out = $_GET['asset_out'];
 if(!isset($asset_in)) { $asset_in = "330109984"; }
 if(!isset($asset_out)) { $asset_out = "0"; }
+if ( filter_var($asset_in, FILTER_VALIDATE_INT) === false ) { exit(); }
+if ( filter_var($asset_out, FILTER_VALIDATE_INT) === false ) { exit(); }
 //if(!$_GET){ $asset_in = "330109984"; $asset_out = "0"; }
 
 $dbname = "pares";
