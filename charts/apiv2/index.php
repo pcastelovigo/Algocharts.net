@@ -1,6 +1,8 @@
 <?php
 header("Content-Type:application/json");
 require "data.php";
+if ( filter_var($_GET['asset_in'], FILTER_VALIDATE_INT) === false ) { exit(); }
+if ( filter_var($_GET['asset_out'], FILTER_VALIDATE_INT) === false ) { exit(); }
 
 if(isset($_GET['asset_in']))
 {
